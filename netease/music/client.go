@@ -3,7 +3,6 @@ package music
 import (
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -36,6 +35,12 @@ var userAgentList = [19]string{
 	"Mozilla/5.0 (iPad; CPU OS 10_0 like Mac OS X) AppleWebKit/602.1.38 (KHTML, like Gecko) Version/10.0 Mobile/14A300 Safari/602.1",
 }
 
+var conf *Yaml
+
+func init() {
+	conf = LoadConf()
+}
+
 func Get(_url string, params map[string]string) (string, error) {
 	client := &http.Client{}
 	form := url.Values{}
@@ -60,7 +65,6 @@ func Get(_url string, params map[string]string) (string, error) {
 
 func Post(_url, params, encSecKey string) (string, error) {
 	pro := GetProxy()
-	fmt.Println("current use proxy:", pro)
 	proxy, _ := url.Parse(strings.ToLower(pro.Type1) + "://" + pro.IP)
 
 	tr := &http.Transport{
@@ -107,7 +111,7 @@ type Proxy struct {
 }
 
 func GetProxy() *Proxy {
-	response, err := http.Get("http://localhost:30000/v2/ip")
+	response, err := http.Get(conf.Services.Proxy.Url)
 	if err != nil {
 		log.Fatalln("Get proxy error, ", err)
 	}
