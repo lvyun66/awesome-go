@@ -1,5 +1,11 @@
 package models
 
+import (
+	"fmt"
+	"github.com/go-xorm/xorm"
+	"github.com/lvyun66/awesome-go/netease/conf"
+)
+
 type MusicUserFans struct {
 	UserId        int    `xorm:"not null pk INT(11)"`
 	UserType      int    `xorm:"INT(11)"`
@@ -21,4 +27,11 @@ type MusicUserFans struct {
 	Signature     string `xorm:"default '' VARCHAR(128)"`
 	EventCount    int    `xorm:"INT(11)"`
 	PlaylistCount int    `xorm:"INT(11)"`
+}
+
+func defaultNeteaseX() *xorm.Engine {
+	var my = conf.DefaultConf.Services.Mysql
+	var dataSourceName = fmt.Sprintf("%s:%s@(%s:%s)/%s?charset=utf8", my.User, my.Password, my.Host, my.Port, "netease")
+	var x, _ = xorm.NewEngine("mysql", dataSourceName)
+	return x
 }

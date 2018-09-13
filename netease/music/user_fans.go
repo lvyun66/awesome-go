@@ -9,6 +9,7 @@ import (
 	"github.com/lvyun66/awesome-go/netease/music/models"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -47,87 +48,101 @@ type FanResponse struct {
 }
 
 func Fans() {
-	engine, err := xorm.NewEngine("mysql", "root:firely0506@("+conf.Services.Mysql.Host+":3306)/netease?charset=utf8")
+	// init xorm
+	my := DefaultConf.Services.Mysql
+	var dataSource = fmt.Sprintf("%s:%s@(%s:%s)/%s?charset=utf8", my.User, my.Password, my.Host, my.Port, "netease")
+	engine, err := xorm.NewEngine("mysql", dataSource)
 	if err != nil {
 		log.Fatalln("Connect mysql error:", err)
 	}
 	if err := engine.Ping(); err != nil {
 		log.Fatalln("Mysql ping error:", err)
 	}
-	engine.ShowSQL(false)
+	engine.ShowSQL(true)
 	engine.SetTableMapper(core.SnakeMapper{})
 
-	var offset = 0
-	var limit = 20
 	var userId = 48353
-	for {
-		fanRequest := &FanRequest{
-			UserId:    strconv.Itoa(userId),
-			Offset:    strconv.Itoa(offset),
-			Limit:     limit,
-			CsrfToken: "",
-		}
-		_params, _ := json.Marshal(fanRequest)
-		params, encSecKey, encErr := EncryptParams(string(_params))
-		if encErr != nil {
-			log.Fatal(encErr)
-		}
-		var response string
-		var err error
-		var retryCount = 1
-		for retryCount <= 5 {
-			response, err = Post("https://music.163.com/weapi/user/getfolloweds?csrf_token=", params, encSecKey)
-			if err != nil {
-				fmt.Printf("[retry %d] Get user followed error: %s\n", retryCount, err)
-			} else {
-				break
-			}
-			retryCount += 1
-			time.Sleep(time.Second * 2)
-		}
+	var processCount = 10
 
-		fans := &FanResponse{}
-		json.Unmarshal([]byte(response), fans)
-		for _, value := range fans.Followeds {
-			musicUserFan := &models.MusicUserFans{}
-			if isExist, _ := engine.Id(value.UserID).Get(musicUserFan); !isExist {
-				musicUserFan.UserId = value.UserID
-				musicUserFan.UserType = value.UserType
-				musicUserFan.NikeName = value.Nickname
-				musicUserFan.Time = value.Time
-				musicUserFan.Py = value.Py
-				musicUserFan.ExpertTags = value.ExpertTags
-				musicUserFan.AuthStatus = value.AuthStatus
-				if value.Followed {
-					musicUserFan.Followed = 1
-				} else {
-					musicUserFan.Followed = 0
+	wg := &sync.WaitGroup{}
+	for i := 0; i < processCount; i++ {
+		wg.Add(1)
+		time.Sleep(time.Second * 10)
+		go func(userId, c, i int) {
+			var limit = 20
+			var offset = limit * i
+			for {
+				fanRequest := &FanRequest{
+					UserId:    strconv.Itoa(userId),
+					Offset:    strconv.Itoa(offset),
+					Limit:     limit,
+					CsrfToken: "",
 				}
-				musicUserFan.VipType = value.VipType
-				musicUserFan.Gender = value.Gender
-				musicUserFan.AccountStatus = value.AccountStatus
-				musicUserFan.AvatarUrl = value.AvatarURL
-				musicUserFan.RemarkName = value.RemarkName
-				musicUserFan.Follows = value.Follows
-				if value.Followed {
-					musicUserFan.Mutual = 1
-				} else {
-					musicUserFan.Mutual = 0
+				_params, _ := json.Marshal(fanRequest)
+				params, encSecKey, encErr := EncryptParams(string(_params))
+				if encErr != nil {
+					log.Fatal(encErr)
 				}
-				musicUserFan.Signature = value.Signature
-				musicUserFan.EventCount = value.EventCount
-				musicUserFan.PlaylistCount = value.PlaylistCount
-				_, err := engine.Insert(musicUserFan)
-				//fmt.Println("Insert result:", affected)
-				if err != nil {
-					fmt.Println("Insert row error:", err, value)
+				var response string
+				var err error
+				var retryCount = 1
+				for retryCount <= 5 {
+					url := "https://music.163.com/weapi/user/getfolloweds?csrf_token="
+					response, err = Post(url, params, encSecKey)
+					if err != nil {
+						fmt.Printf("[CC][retry %d] Get user followed error: %s\n", retryCount, err)
+					} else {
+						break
+					}
+					retryCount += 1
+					time.Sleep(time.Second * 2)
 				}
+
+				fans := &FanResponse{}
+				json.Unmarshal([]byte(response), fans)
+				for _, value := range fans.Followeds {
+					musicUserFan := &models.MusicUserFans{}
+					if isExist, _ := engine.Id(value.UserID).Get(musicUserFan); !isExist {
+						musicUserFan.UserId = value.UserID
+						musicUserFan.UserType = value.UserType
+						musicUserFan.NikeName = value.Nickname
+						musicUserFan.Time = value.Time
+						musicUserFan.Py = value.Py
+						musicUserFan.ExpertTags = value.ExpertTags
+						musicUserFan.AuthStatus = value.AuthStatus
+						if value.Followed {
+							musicUserFan.Followed = 1
+						} else {
+							musicUserFan.Followed = 0
+						}
+						musicUserFan.VipType = value.VipType
+						musicUserFan.Gender = value.Gender
+						musicUserFan.AccountStatus = value.AccountStatus
+						musicUserFan.AvatarUrl = value.AvatarURL
+						musicUserFan.RemarkName = value.RemarkName
+						musicUserFan.Follows = value.Follows
+						if value.Followed {
+							musicUserFan.Mutual = 1
+						} else {
+							musicUserFan.Mutual = 0
+						}
+						musicUserFan.Signature = value.Signature
+						musicUserFan.EventCount = value.EventCount
+						musicUserFan.PlaylistCount = value.PlaylistCount
+						_, err := engine.Insert(musicUserFan)
+						if err != nil {
+							fmt.Println("Insert row error:", err, value)
+						}
+					}
+				}
+				offset += limit * processCount
+				if fans.More == false {
+					break
+				}
+				time.Sleep(time.Second)
 			}
-		}
-		offset += limit
-		if fans.More == false {
-			break
-		}
-		time.Sleep(time.Second)
+			wg.Done()
+		}(userId, processCount, i)
 	}
+	wg.Wait()
 }

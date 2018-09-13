@@ -3,6 +3,7 @@ package music
 import (
 	"crypto/tls"
 	"encoding/json"
+	"github.com/lvyun66/awesome-go/netease/music/models"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -33,12 +34,6 @@ var userAgentList = [19]string{
 	"Mozilla/5.0 (Windows NT 6.3; Win64, x64; Trident/7.0; rv:11.0) like Gecko",
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/13.10586",
 	"Mozilla/5.0 (iPad; CPU OS 10_0 like Mac OS X) AppleWebKit/602.1.38 (KHTML, like Gecko) Version/10.0 Mobile/14A300 Safari/602.1",
-}
-
-var conf *Yaml
-
-func init() {
-	conf = LoadConf()
 }
 
 func Get(_url string, params map[string]string) (string, error) {
@@ -89,6 +84,10 @@ func Post(_url, params, encSecKey string) (string, error) {
 	response, reqErr := client.Do(request)
 	// 错误处理
 	if reqErr != nil {
+		ip := &models.Ip{
+			Id: pro.ID,
+		}
+		models.DeleteIP(ip)
 		return "", reqErr
 	}
 	defer response.Body.Close()
@@ -105,13 +104,14 @@ func fakeAgent() string {
 }
 
 type Proxy struct {
+	ID    int64  `json:"id"`
 	IP    string `json:"ip"`
 	Type1 string `json:"type1"`
 	Speed int    `json:"speed"`
 }
 
 func GetProxy() *Proxy {
-	response, err := http.Get(conf.Services.Proxy.Url)
+	response, err := http.Get(DefaultConf.Services.Proxy.Url)
 	if err != nil {
 		log.Fatalln("Get proxy error, ", err)
 	}

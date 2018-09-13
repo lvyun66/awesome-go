@@ -1,8 +1,2 @@
-bitbucket.org/
-git.oschina.net/
-github.com/
-golang.org/
-gopkg.in/
-sourcegraph.com/
 .DS_Store
-netease/music/app.yml
+netease/conf/app.yml
