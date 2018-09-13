@@ -3,6 +3,7 @@ package music
 import (
 	"crypto/tls"
 	"encoding/json"
+	"github.com/lvyun66/awesome-go/netease/conf"
 	"github.com/lvyun66/awesome-go/netease/music/models"
 	"io/ioutil"
 	"log"
@@ -111,7 +112,7 @@ type Proxy struct {
 }
 
 func GetProxy() *Proxy {
-	response, err := http.Get(DefaultConf.Services.Proxy.Url)
+	response, err := http.Get(conf.DefaultConf.Services.Proxy.Url)
 	if err != nil {
 		log.Fatalln("Get proxy error, ", err)
 	}

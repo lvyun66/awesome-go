@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
+	"github.com/lvyun66/awesome-go/netease/conf"
 	"github.com/lvyun66/awesome-go/netease/music/models"
 	"log"
 	"strconv"
@@ -49,7 +50,7 @@ type FanResponse struct {
 
 func Fans() {
 	// init xorm
-	my := DefaultConf.Services.Mysql
+	my := conf.DefaultConf.Services.Mysql
 	var dataSource = fmt.Sprintf("%s:%s@(%s:%s)/%s?charset=utf8", my.User, my.Password, my.Host, my.Port, "netease")
 	engine, err := xorm.NewEngine("mysql", dataSource)
 	if err != nil {
