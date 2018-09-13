@@ -140,7 +140,7 @@ func Fans() {
 				if fans.More == false {
 					break
 				}
-				time.Sleep(time.Second)
+				time.Sleep(time.Second * 3)
 			}
 			wg.Done()
 		}(userId, processCount, i)
