@@ -69,7 +69,7 @@ func Fans() {
 	wg := &sync.WaitGroup{}
 	for i := 0; i < processCount; i++ {
 		wg.Add(1)
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second)
 		go func(userId, c, i int) {
 			var limit = 20
 			var offset = limit * i
@@ -141,7 +141,7 @@ func Fans() {
 				if fans.More == false {
 					break
 				}
-				time.Sleep(time.Second * 3)
+				time.Sleep(time.Second * 2)
 			}
 			wg.Done()
 		}(userId, processCount, i)

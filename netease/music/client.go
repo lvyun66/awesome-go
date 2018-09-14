@@ -3,8 +3,6 @@ package music
 import (
 	"crypto/tls"
 	"encoding/json"
-	"github.com/lvyun66/awesome-go/netease/conf"
-	"github.com/lvyun66/awesome-go/netease/music/models"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -13,6 +11,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lvyun66/awesome-go/netease/conf"
+	"github.com/lvyun66/awesome-go/netease/music/models"
 )
 
 var userAgentList = [19]string{
@@ -86,7 +87,8 @@ func Post(_url, params, encSecKey string) (string, error) {
 	// 错误处理
 	if reqErr != nil {
 		ip := &models.Ip{
-			Id: pro.ID,
+			Id:   pro.ID,
+			Data: pro.IP,
 		}
 		models.DeleteIP(ip)
 		return "", reqErr
