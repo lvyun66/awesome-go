@@ -69,10 +69,9 @@ func Fans() {
 	wg := &sync.WaitGroup{}
 	for i := 0; i < processCount; i++ {
 		wg.Add(1)
-		time.Sleep(time.Second)
 		go func(userId, c, i int) {
 			var limit = 20
-			var offset = limit * i
+			var offset = limit * (i % 5)
 			for {
 				fanRequest := &FanRequest{
 					UserId:    strconv.Itoa(userId),
@@ -137,7 +136,6 @@ func Fans() {
 						}
 					}
 				}
-				offset += limit * processCount
 				if fans.More == false {
 					break
 				}
