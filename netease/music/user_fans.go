@@ -71,7 +71,7 @@ func Fans() {
 		wg.Add(1)
 		go func(userId, c, i int) {
 			var limit = 20
-			var offset = limit * (i % 3)
+			var offset = limit * i
 			for {
 				fanRequest := &FanRequest{
 					UserId:    strconv.Itoa(userId),
@@ -136,6 +136,7 @@ func Fans() {
 						}
 					}
 				}
+				offset += limit * processCount
 				if fans.More == false {
 					break
 				}
