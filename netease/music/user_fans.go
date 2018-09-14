@@ -3,15 +3,16 @@ package music
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"strconv"
+	"sync"
+	"time"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	"github.com/lvyun66/awesome-go/netease/conf"
 	"github.com/lvyun66/awesome-go/netease/music/models"
-	"log"
-	"strconv"
-	"sync"
-	"time"
 )
 
 type FanRequest struct {
@@ -96,7 +97,7 @@ func Fans() {
 						break
 					}
 					retryCount += 1
-					time.Sleep(time.Second * 2)
+					time.Sleep(time.Second)
 				}
 
 				fans := &FanResponse{}
