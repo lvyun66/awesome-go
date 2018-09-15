@@ -7,6 +7,7 @@ import (
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	"github.com/lvyun66/awesome-go/netease/conf"
+	"github.com/lvyun66/awesome-go/netease/music/basetool"
 	"github.com/lvyun66/awesome-go/netease/music/models"
 	"log"
 	"strconv"
@@ -80,7 +81,7 @@ func Fans() {
 					CsrfToken: "",
 				}
 				_params, _ := json.Marshal(fanRequest)
-				params, encSecKey, encErr := EncryptParams(string(_params))
+				params, encSecKey, encErr := basetool.EncryptParams(string(_params))
 				if encErr != nil {
 					log.Fatal(encErr)
 				}
@@ -89,7 +90,7 @@ func Fans() {
 				var retryCount = 1
 				for retryCount <= 5 {
 					url := "https://music.163.com/weapi/user/getfolloweds?csrf_token="
-					response, err = Post(url, params, encSecKey)
+					response, err = basetool.Post(url, params, encSecKey)
 					if err != nil {
 						fmt.Printf("[CC][retry %d] Get user followed error: %s\n", retryCount, err)
 					} else {

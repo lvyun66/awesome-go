@@ -3,6 +3,11 @@ services:
     host: localhost
     port: 3306
     user: root
-    password: firely0506
+    password: 123456
+  mongo:
+    url: localhost:27017
+    source: netease
+    username: root
+    password: 123456
   proxy:
     url: http://localhost:30000/v2/ip

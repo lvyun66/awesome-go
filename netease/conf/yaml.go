@@ -15,6 +15,12 @@ type Yaml struct {
 			User     string `yaml:"user"`
 			Password string `yaml:"password"`
 		} `yaml:"mysql"`
+		Mongo struct {
+			Url      string `yaml:"url"`
+			Source   string `yaml:"source"`
+			Username string `yaml:"username"`
+			Password string `yaml:"password"`
+		}
 		Proxy struct {
 			Url string `yaml:"url"`
 		} `yaml:"proxy"`
