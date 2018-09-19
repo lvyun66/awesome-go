@@ -24,8 +24,8 @@ func GetProxy() *Proxy {
 	data, _ := ioutil.ReadAll(response.Body)
 	proxy := &Proxy{}
 	json.Unmarshal(data, proxy)
-	//if proxy.IP == "" {
-	//	log.Fatalln("[PROXY] proxy is empty")
-	//}
+	if proxy.IP == "" {
+		log.Println("[PROXY] proxy is empty, please notify your proxy pool is working!")
+	}
 	return proxy
 }

@@ -2,6 +2,7 @@ package music
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/lvyun66/awesome-go/netease/conf"
 	"github.com/lvyun66/awesome-go/netease/music/basetool"
 	"gopkg.in/mgo.v2"
@@ -86,7 +87,7 @@ type User struct {
 func GetSongComments(songId int) bool {
 	var limit = 100
 	var rid = strconv.Itoa(songId)
-	var processCount = 1
+	var processCount = 5
 
 	go func() {
 		for {
@@ -106,7 +107,7 @@ func GetSongComments(songId int) bool {
 		wg.Add(1)
 		go func(i int) {
 			log.Println("goroutine", i, "is started")
-			var offset = limit * i
+			var offset = limit * i + 55000
 			var total = false
 			if offset == 0 {
 				total = true
@@ -124,11 +125,21 @@ func GetSongComments(songId int) bool {
 				if err != nil {
 					log.Fatal(err)
 				}
-				_url := "https://music.163.com/weapi/v1/resource/comments/R_SO_4_" + rid + "?csrf_token="
-				str, err := basetool.Post(_url, encParams, encSecKey)
-				if err != nil {
-					log.Println("[comment][error]", err)
+
+				var str string
+				var retryCount = 1
+				for retryCount <= 5 {
+					_url := "https://music.163.com/weapi/v1/resource/comments/R_SO_4_" + rid + "?csrf_token="
+					str, err = basetool.Post(_url, encParams, encSecKey)
+					if err != nil {
+						fmt.Printf("[CC][retry %d] Get user followed error: %s\n", retryCount, err)
+					} else {
+						break
+					}
+					retryCount += 1
+					time.Sleep(time.Second)
 				}
+
 				response := &SongComments{}
 				json.Unmarshal([]byte(str), response)
 				if !response.More {
@@ -147,7 +158,7 @@ func GetSongComments(songId int) bool {
 					}
 				}
 				offset += limit * processCount
-				time.Sleep(time.Second * 60)
+				time.Sleep(time.Second * 2)
 			}
 			wg.Done()
 		}(i)
